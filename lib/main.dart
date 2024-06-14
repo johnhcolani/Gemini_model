@@ -12,7 +12,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Flutter AI Response Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -95,80 +94,95 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
         foregroundColor: Colors.white,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              if (state.needsUpdate)
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  color: Colors.red,
-                  child: const Text(
-                    'Please update the AI model',
-                    style: TextStyle(color: Colors.white),
-                  ),
+        child: Stack(
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'images/background.gif', // Replace with your image path
+                  fit: BoxFit.contain,
                 ),
-              Row(
+              ),
+            ),
+            // Main content
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                 children: [
+                  if (state.needsUpdate)
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      color: Colors.red,
+                      child: const Text(
+                        'Please update the AI model',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextBox(
+                          textEditingController: controller,
+                          hintText: "Enter your question...",
+                          enabled: !state.isLoading,
+                          maxLines: _maxLines,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: controller.text.isEmpty ? null : _handleSubmit,
+                        icon: controller.text.isEmpty
+                            ? const Icon(Icons.pause, color: Colors.white)
+                            : const Icon(Icons.play_arrow, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Expanded(
-                    child: CustomTextBox(
-                      textEditingController: controller,
-                      hintText: "Enter your question...",
-                      enabled: !state.isLoading,
-                      maxLines: _maxLines,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: state.questions.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Card(
+                                color: Colors.blueGrey[900]?.withOpacity(0.7),
+                                child: ListTile(
+                                  title: Text(
+                                    'Q: ${state.questions[index]}',
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                ),
+                              ),
+                              Card(
+                                color: Colors.blueGrey[800]?.withOpacity(0.7),
+                                child: ListTile(
+                                  title: Text(
+                                    'A: ${index == state.questions.length - 1 && state.isLoading ? state.currentAnswer : state.aiAnswers[index]}',
+                                    style: Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: controller.text.isEmpty ? null : _handleSubmit,
-                    icon: controller.text.isEmpty
-                        ? const Icon(Icons.pause, color: Colors.white)
-                        : const Icon(Icons.play_arrow, color: Colors.white),
-                  ),
+                  if (state.isLoading)
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: state.questions.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Card(
-                            color: Colors.blueGrey[900],
-                            child: ListTile(
-                              title: Text(
-                                'Q: ${state.questions[index]}',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                            ),
-                          ),
-                          Card(
-                            color: Colors.blueGrey[800],
-                            child: ListTile(
-                              title: Text(
-                                'A: ${index == state.questions.length - 1 && state.isLoading ? state.currentAnswer : state.aiAnswers[index]}',
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              if (state.isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
